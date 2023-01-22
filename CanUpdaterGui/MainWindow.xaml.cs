@@ -36,7 +36,6 @@ namespace CanUpdaterGui
         public MainWindow()
         {
             InitializeComponent();
-            DataContext = this;
         }
     }
 }

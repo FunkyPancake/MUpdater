@@ -5,21 +5,49 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:CanUpdaterGui"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        Title="MainWindow" Height="450" Width="800"
+        DataContext="{Binding RelativeSource={RelativeSource Self}}">
+
     <Window.Resources>
         <local:HexArrayValueConverter x:Key="HexArrayValueConverter"></local:HexArrayValueConverter>
         <local:HexValueConverter x:Key="HexValueConverter"></local:HexValueConverter>
     </Window.Resources>
     <Grid>
-        <Button Height="30" Width="100"></Button>
-        <ListView ItemsSource="{Binding Frames}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="20"></RowDefinition>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        <Menu Grid.Row="0">
+            <MenuItem Header="_File">
+                <MenuItem Header="_Open" />
+                <MenuItem Header="_Close" />
+                <MenuItem Header="_Save" />
+            </MenuItem>
+            <MenuItem Header="_Options">
+                <MenuItem Header="CAN configuration"></MenuItem>
+            </MenuItem>
+            <MenuItem Header="_Device">
+                <MenuItem Header=""></MenuItem>
+            </MenuItem>
+        </Menu>
+        <Grid Grid.Row="1">
+            <Button Height="30" Width="100"></Button>
+        </Grid>
+        <GridSplitter Grid.Row="2" ResizeDirection="Rows" ResizeBehavior="PreviousAndNext" BorderThickness="5"
+                      HorizontalAlignment="Stretch" />
+        <ListView Grid.Row="3" VerticalAlignment="Bottom" ItemsSource="{Binding Frames}">
             <ListView.View>
                 <GridView AllowsColumnReorder="true"
                           ColumnHeaderToolTip="Employee Information">
-                    <GridViewColumn DisplayMemberBinding="{Binding Path=Id, Converter={StaticResource HexValueConverter}}"
-                                            Header="Id" />
-                    <GridViewColumn DisplayMemberBinding="{Binding Path=Payload, Converter={StaticResource HexArrayValueConverter}}" Header="Payload" />
                     <GridViewColumn DisplayMemberBinding="{Binding Path=Timestamp}" Header="Timestamp"></GridViewColumn>
+                    <GridViewColumn
+                        DisplayMemberBinding="{Binding Path=Id, Converter={StaticResource HexValueConverter}}"
+                        Header="Id" />
+                    <GridViewColumn
+                        DisplayMemberBinding="{Binding Path=Payload, Converter={StaticResource HexArrayValueConverter}}"
+                        Header="Payload" />
                 </GridView>
             </ListView.View>
         </ListView>
