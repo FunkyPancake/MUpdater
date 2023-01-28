@@ -1,6 +1,6 @@
 ﻿using System.Globalization;
 using System.Text.RegularExpressions;
-using StringConverters;
+
 namespace IntelHex;
 
 public record HexEntry
