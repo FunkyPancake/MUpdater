@@ -4,14 +4,14 @@ using Serilog;
 
 namespace CanUpdater;
 
-public class Class1
+public class PeakCan : ICanDevice
 {
     private readonly ILogger _logger;
     private const string DeviceType = $"{PCANBasic.LOOKUP_DEVICE_TYPE}=PCAN_USB";
     private ushort _handle;
-    private UInt16 English = 0x09;
+    private const ushort English = 0x09;
 
-    public Class1(ILogger logger)
+    public PeakCan(ILogger logger)
     {
         _logger = logger;
         CheckForLibrary();
@@ -28,6 +28,46 @@ public class Class1
 
         _handle = handle;
         return true;
+    }
+
+    public void Configure(CanDeviceConfig config)
+    {
+        
+    }
+
+    public void Disconnect()
+    {
+        throw new NotImplementedException();
+    }
+
+    public void SendFrame()
+    {
+        throw new NotImplementedException();
+    }
+
+    public void SendFrameCyclic()
+    {
+        throw new NotImplementedException();
+    }
+
+    public void SubscribeFrame()
+    {
+        throw new NotImplementedException();
+    }
+
+    public void UnsubscribeFrame()
+    {
+        throw new NotImplementedException();
+    }
+
+    public void GetFrame()
+    {
+        throw new NotImplementedException();
+    }
+
+    public List<uint> GetAvailableChannels()
+    {
+        throw new NotImplementedException();
     }
 
     private void LogPeakcanError(TPCANStatus status)
@@ -55,7 +95,6 @@ public class Class1
 
     private void CheckForLibrary()
     {
-        // Check for dll file
         try
         {
             PCANBasic.Uninitialize(PCANBasic.PCAN_NONEBUS);
