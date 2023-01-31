@@ -1,6 +1,6 @@
 ﻿using System.Text;
-using Peak.Can.Basic;
 using Serilog;
+using Peak.Can.Basic;
 
 namespace CanUpdater;
 
@@ -32,22 +32,45 @@ public class PeakCan : ICanDevice
 
     public void Configure(CanDeviceConfig config)
     {
-        
+        Connect();
+        PCANBasic.Initialize(_handle, TPCANBaudrate.PCAN_BAUD_500K);
     }
 
     public void Disconnect()
     {
-        throw new NotImplementedException();
+        PCANBasic.Uninitialize(_handle);
     }
 
-    public void SendFrame()
+    public void SendFrame(CanFrame frame)
     {
-        throw new NotImplementedException();
+        var msg = GetPcanMessage(frame);
+        var result = PCANBasic.Write(_handle, ref msg);
+        if (result != TPCANStatus.PCAN_ERROR_OK)
+        {
+            LogPeakcanError(result);
+        }
     }
 
-    public void SendFrameCyclic()
+    private TPCANMsg GetPcanMessage(CanFrame frame)
     {
-        throw new NotImplementedException();
+        var msg = new TPCANMsg
+        {
+            ID = frame.Id,
+            MSGTYPE = frame.IdType == IdType.Extended
+                ? TPCANMessageType.PCAN_MESSAGE_EXTENDED
+                : TPCANMessageType.PCAN_MESSAGE_STANDARD,
+            LEN = Convert.ToByte(frame.Dlc),
+            DATA = new byte[8]
+        };
+        frame.Payload.CopyTo(msg.DATA,0);
+        return msg;
+    }
+
+    public void SendFrameCyclic(CanFrame frame, int cycleTime)
+    {
+        // var msg = GetPcanMessage(frame);
+        // var broadcast = new Broadcast(msg, cycleTime);
+        // _worker.AddBroadcast(ref broadcast);
     }
 
     public void SubscribeFrame()
@@ -65,7 +88,7 @@ public class PeakCan : ICanDevice
         throw new NotImplementedException();
     }
 
-    public List<uint> GetAvailableChannels()
+    public List<string> GetAvailableChannels()
     {
         throw new NotImplementedException();
     }
@@ -79,7 +102,7 @@ public class PeakCan : ICanDevice
 
     public bool Open()
     {
-        AssertHandleValid();
+        // AssertHandleValid();
         var status = PCANBasic.Initialize(_handle, TPCANBaudrate.PCAN_BAUD_1M);
         if (status != TPCANStatus.PCAN_ERROR_OK)
         {
@@ -106,21 +129,21 @@ public class PeakCan : ICanDevice
         }
     }
 
-    private void AssertHandleValid()
-    {
-        if (_handle != 0)
-        {
-            return;
-        }
-
-        const string msg = "Channel handle value invalid";
-        _logger.Fatal(msg);
-        throw new InvalidDataException(msg);
-    }
+    // private PcanMessage GetPcanMessage(CanFrame frame)
+    // {
+    //     if (_handle != 0)
+    //     {
+    //         return;
+    //     }
+    //
+    //     const string msg = "Channel handle value invalid";
+    //     _logger.Fatal(msg);
+    //     throw new InvalidDataException(msg);
+    // }
 
     public void Close()
     {
-        AssertHandleValid();
+        // AssertHandleValid();
         _logger.Information("Close channel");
         PCANBasic.Uninitialize(_handle);
     }
