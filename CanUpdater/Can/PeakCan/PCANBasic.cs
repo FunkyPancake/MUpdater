@@ -16,11 +16,11 @@
 //  Copyright (C) 1999-2022  PEAK-System Technik GmbH, Darmstadt
 //  more Info at http://www.peak-system.com 
 //
-using System;
-using System.Text;
-using System.Runtime.InteropServices;
 
-namespace Peak.Can.Basic
+using System.Runtime.InteropServices;
+using System.Text;
+
+namespace CanUpdater.Can.PeakCan
 {    
     using TPCANHandle = System.UInt16;    
     using TPCANBitrateFD = System.String;

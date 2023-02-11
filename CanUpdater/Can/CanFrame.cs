@@ -1,4 +1,4 @@
-namespace CanUpdater;
+namespace CanUpdater.Can;
 
 public struct CanFrame
 {
@@ -12,4 +12,11 @@ public enum IdType
 {
     Normal,
     Extended
+}
+
+public enum Baudrate
+{
+    Baud250k,
+    Baud500k,
+    Baud1000k
 }
