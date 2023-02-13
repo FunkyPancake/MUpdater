@@ -7,8 +7,8 @@ using Peak.Can.Basic;
 namespace CanUpdater.Can.PeakCan;
 
 public class PeakCan : ICanDevice {
-    private readonly EventHandlerList _eventHandlers = new();
-    private Dictionary<uint, int> _broadcastDictionary = new();
+    private readonly Dictionary<uint, ICanDevice.NewFrameReceivedEventHandler> _eventHandlers = new();
+    private readonly Dictionary<uint, int> _broadcastDictionary = new();
     private readonly ILogger _logger;
     private CanDeviceConfig _config = null!;
     private PcanChannel _handle = PcanChannel.None;
@@ -87,17 +87,18 @@ public class PeakCan : ICanDevice {
     }
 
     public void SubscribeFrame(CanFrame frame, ICanDevice.NewFrameReceivedEventHandler handler) {
-        _eventHandlers.AddHandler(frame.Id, handler);
+        _eventHandlers.Add(GetId(frame.Id), handler);
+        _logger.Information("Subscribe frame ID:{id}", GetId(frame.Id));
     }
 
     public void UnsubscribeFrame(CanFrame frame) {
-        var e = (ICanDevice.NewFrameReceivedEventHandler?) _eventHandlers[frame.Id];
-        if (e is null) {
-            _logger.Error("Frame ID:{} not subscribed", frame.Id);
+        if (!_eventHandlers.ContainsKey(GetId(frame.Id))) {
+            _logger.Error("Frame ID:{id} not subscribed", frame.Id);
             return;
         }
 
-        _eventHandlers.RemoveHandler(frame.Id, e);
+        _eventHandlers.Remove(GetId(frame.Id));
+        _logger.Information("Unsubscribe frame ID:{id}", GetId(frame.Id));
     }
 
     public void GetFrame(out CanFrame frame) {
@@ -112,45 +113,25 @@ public class PeakCan : ICanDevice {
                 str.Append($"0x{message.Data[i]:x2} ");
             }
 
-            _logger.Information("Rx Messge Timestamp:{timestamp} ID:{id}, DLC:{dlc}, payload:{payload}", timestamp,
+            _logger.Information("Rx Message Timestamp:{timestamp} ID:{id:X}, DLC:{dlc}, payload:{payload}", timestamp,
                 message.ID, message.DLC, str);
+            if (_eventHandlers.TryGetValue(message.ID, out var ev)) {
+                ev.Invoke(this, new NewFrameRecievedEventArgs());
+            }
         }
         else {
             _logger.Error("Cannot dequeue queue with Index:{idx}", e.QueueIndex);
         }
     }
 
-    public List<string> GetAvailableChannels() {
-        throw new NotImplementedException();
-    }
-
-    private PcanMessage GetPcanMessage(CanFrame frame) {
+    private static PcanMessage GetPcanMessage(CanFrame frame) {
         var msg = new PcanMessage {
-            ID = frame.Id,
-            MsgType = GetMessgeType(frame.Id),
+            ID = frame.Id & 0x7fffffff,
+            MsgType = GetMessageType(frame.Id),
             DLC = frame.Dlc,
             Data = frame.Payload
         };
         return msg;
-    }
-
-    // private void LogError(TPCANStatus status)
-    // {
-    //     // var stringBuffer = new StringBuilder();
-    //     // PCANBasic.GetErrorText(status, PcanEnglish, stringBuffer);
-    //     // _logger.Error("Error message : {Message}", stringBuffer.ToString());
-    // }
-
-    private void CheckForLibrary() {
-        // try
-        // {
-        //     PCANBasic.Uninitialize(PCANBasic.PCAN_NONEBUS);
-        // }
-        // catch (DllNotFoundException)
-        // {
-        //     _logger.Fatal("Unable to find the library: PCANBasic.dll");
-        //     throw;
-        // }
     }
 
     private static Bitrate ConvertBitrate(Baudrate bitrate) {
@@ -165,10 +146,13 @@ public class PeakCan : ICanDevice {
         return value;
     }
 
-    private MessageType GetMessgeType(uint id) {
+    private static MessageType GetMessageType(uint id) {
         const uint extIdFlag = 0x80000000;
         return (id & extIdFlag) == extIdFlag ? MessageType.Extended : MessageType.Standard;
     }
+
+    private static uint GetId(uint id) => id & 0x7fffffff;
+
     // private bool ReadMessage(out CanFrame frame)
     // {
     //     // We execute the "Read" function of the PCANBasic     
