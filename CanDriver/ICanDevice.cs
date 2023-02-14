@@ -1,6 +1,5 @@
-using Peak.Can.Basic;
 
-namespace CanUpdater.Can;
+namespace CanDriver;
 
 public interface ICanDevice {
     public delegate void NewFrameReceivedEventHandler(object sender, NewFrameRecievedEventArgs e);

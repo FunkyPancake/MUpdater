@@ -1,9 +1,7 @@
-﻿using System.Text;
+﻿using Peak.Can.Basic;
 using Serilog;
-using Peak.Can.Basic;
 
-
-namespace CanUpdater.Can.PeakCan;
+namespace CanDriver.PeakCan;
 
 public class PeakCan : ICanDevice {
     private readonly Dictionary<uint, int> _broadcastDictionary = new();

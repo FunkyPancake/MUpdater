@@ -1,4 +1,4 @@
-namespace CanUpdater.Can;
+namespace CanDriver;
 
 public struct CanFrame {
     public uint Id { get; init; }

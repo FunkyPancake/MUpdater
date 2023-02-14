@@ -1,4 +1,4 @@
-namespace CanUpdater.Can;
+namespace CanDriver;
 
 public record CanDeviceConfig(
     Baudrate Baudrate
