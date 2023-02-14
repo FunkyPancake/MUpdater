@@ -5,4 +5,5 @@
 	<s:Boolean x:Key="/Default/AddReferences/RecentPaths/=C_003A_005CWindows_005CSystem32_005CPCANBasic_002Edll/@EntryIndexedValue">True</s:Boolean>
 	<s:String x:Key="/Default/Environment/AssemblyExplorer/XmlDocument/@EntryValue">&lt;AssemblyExplorer&gt;&#xD;
   &lt;Assembly Path="C:\Users\PC\.nuget\packages\mono.options\6.12.0.148\lib\netstandard2.0\Mono.Options.dll" /&gt;&#xD;
+  &lt;Assembly Path="C:\Users\PC\.nuget\packages\peak.pcanbasic.net\4.6.2.753\lib\netstandard2.0\PCANBasic.NET.dll" /&gt;&#xD;
 &lt;/AssemblyExplorer&gt;</s:String></wpf:ResourceDictionary>

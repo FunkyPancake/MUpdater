@@ -1,5 +1,4 @@
 ﻿using System.Text.RegularExpressions;
-using StringConverters;
 namespace IntelHex;
 
 public static class HexIo
@@ -143,3 +142,4 @@ public static class HexIo
         return $"{(byte)(0x100 - sum):X2}";
     }
 }
+
