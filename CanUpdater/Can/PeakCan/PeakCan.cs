@@ -1,5 +1,4 @@
-﻿using System.ComponentModel;
-using System.Text;
+﻿using System.Text;
 using Serilog;
 using Peak.Can.Basic;
 
@@ -7,9 +6,11 @@ using Peak.Can.Basic;
 namespace CanUpdater.Can.PeakCan;
 
 public class PeakCan : ICanDevice {
-    private readonly Dictionary<uint, ICanDevice.NewFrameReceivedEventHandler> _eventHandlers = new();
     private readonly Dictionary<uint, int> _broadcastDictionary = new();
+    private readonly Dictionary<uint, ICanDevice.NewFrameReceivedEventHandler> _eventHandlers = new();
+    private readonly Dictionary<uint, CanFrame> _lastFrame = new Dictionary<uint, CanFrame>();
     private readonly ILogger _logger;
+    private readonly Dictionary<uint, Queue<CanFrame>> _rxQueues = new();
     private CanDeviceConfig _config = null!;
     private PcanChannel _handle = PcanChannel.None;
     private Worker _worker = new();
@@ -41,8 +42,11 @@ public class PeakCan : ICanDevice {
 
     public void Disconnect() {
         _logger.Information($"Close channel {_handle}");
-        _worker.Stop(true, true, false);
+        _worker.Stop(true, true);
         Api.Uninitialize(_handle);
+        _lastFrame.Clear();
+        _rxQueues.Clear();
+        _eventHandlers.Clear();
     }
 
     public void SendFrame(CanFrame frame) {
@@ -52,7 +56,7 @@ public class PeakCan : ICanDevice {
         }
     }
 
-    public void SendFrames(IReadOnlyList<CanFrame> frames) {
+    public void SendFrames(IEnumerable<CanFrame> frames) {
         foreach (var frame in frames) {
             SendFrame(frame);
         }
@@ -63,13 +67,14 @@ public class PeakCan : ICanDevice {
         if (_broadcastDictionary.ContainsKey(frame.Id)) {
             broadcastId = _broadcastDictionary[frame.Id];
             _worker.UpdateBroadcast(broadcastId, cycleTime, GetPcanMessage(frame));
-            _logger.Information("Update cyclic transmit, frame ID:{id}, new cycle time: {cycleTime}", frame.Id,
+            _logger.Information("Update cyclic transmit, frame ID:{id:X}, new cycle time: {cycleTime}", frame.Id,
                 cycleTime);
         }
         else {
             broadcastId = _worker.AddBroadcast(GetPcanMessage(frame), cycleTime);
             _broadcastDictionary.Add(frame.Id, broadcastId);
-            _logger.Information("Add new cyclic transmit, frame ID:{id}, cycle time: {cycleTime}", frame.Id, cycleTime);
+            _logger.Information("Add new cyclic transmit, frame ID:{id:X}, cycle time: {cycleTime}", frame.Id,
+                cycleTime);
         }
 
         _worker.ResumeBroadcast(broadcastId);
@@ -79,44 +84,79 @@ public class PeakCan : ICanDevice {
         if (_broadcastDictionary.ContainsKey(frame.Id)) {
             var broadcastId = _broadcastDictionary[frame.Id];
             _worker.PauseBroadcast(broadcastId);
-            _logger.Information("Cyclic transmit stopped, frame ID:{id}", frame.Id);
+            _logger.Information("Cyclic transmit stopped, frame ID:{id:X}", frame.Id);
         }
         else {
-            _logger.Error("Frame ID:{id} is not cyclic TX", frame.Id);
+            _logger.Error("Frame ID:{id:X}is not cyclic TX", frame.Id);
         }
     }
 
-    public void SubscribeFrame(CanFrame frame, ICanDevice.NewFrameReceivedEventHandler handler) {
-        _eventHandlers.Add(GetId(frame.Id), handler);
-        _logger.Information("Subscribe frame ID:{id}", GetId(frame.Id));
+    public void SubscribeFrame(CanFrame frame, ICanDevice.NewFrameReceivedEventHandler? handler = null,
+        bool createMessageQueue = false) {
+        if (handler is not null) {
+            _eventHandlers.Add(GetId(frame.Id), handler);
+            _logger.Information("Subscribe frame ID:{id:X}, event handler: {handler}", GetId(frame.Id),
+                nameof(handler));
+        }
+
+        if (createMessageQueue) {
+            _rxQueues.TryAdd(GetId(frame.Id), new Queue<CanFrame>());
+        }
     }
 
     public void UnsubscribeFrame(CanFrame frame) {
-        if (!_eventHandlers.ContainsKey(GetId(frame.Id))) {
-            _logger.Error("Frame ID:{id} not subscribed", frame.Id);
-            return;
+        var id = GetId(frame.Id);
+        if (_eventHandlers.ContainsKey(id)) {
+            _eventHandlers.Remove(id);
         }
 
-        _eventHandlers.Remove(GetId(frame.Id));
-        _logger.Information("Unsubscribe frame ID:{id}", GetId(frame.Id));
+        if (_rxQueues.ContainsKey(id)) {
+            _rxQueues[id].Clear();
+            _rxQueues.Remove(id);
+        }
+
+        _logger.Information("Unsubscribe frame ID:{id:X}", GetId(frame.Id));
     }
 
-    public void GetFrame(out CanFrame frame) {
-        frame = new CanFrame();
-        throw new NotImplementedException();
+    public IEnumerable<CanFrame> GetFrames(CanFrame frame) {
+        var list = new List<CanFrame>();
+        var id = GetId(frame.Id);
+        if (!_rxQueues.TryGetValue(id, out var queue))
+            return list;
+
+        while (queue.Count > 0) {
+            list.Add(queue.Dequeue());
+        }
+
+        return list;
+    }
+
+    public bool GetFrame(ref CanFrame frame) {
+        var id = frame.Id;
+        if (_rxQueues.ContainsKey(id)) {
+            frame = _rxQueues[id].Dequeue();
+            return true;
+        }
+
+        if (!_lastFrame.ContainsKey(id))
+            return false;
+        frame = _lastFrame[id];
+        return true;
     }
 
     private void OnMessageAvailable(object? sender, MessageAvailableEventArgs e) {
         if (_worker.Dequeue(e.QueueIndex, out var message, out var timestamp)) {
-            var str = new StringBuilder(message.Data.MaxLength * 4 + 1);
-            for (var i = 0; i < message.DLC; i++) {
-                str.Append($"0x{message.Data[i]:x2} ");
+            var frame = BuildPcanMessage(message, timestamp);
+            if (_rxQueues.TryGetValue(message.ID, out var queue)) {
+                queue.Enqueue(frame);
             }
 
-            _logger.Information("Rx Message Timestamp:{timestamp} ID:{id:X}, DLC:{dlc}, payload:{payload}", timestamp,
-                message.ID, message.DLC, str);
             if (_eventHandlers.TryGetValue(message.ID, out var ev)) {
-                ev.Invoke(this, new NewFrameRecievedEventArgs());
+                ev.Invoke(this, new NewFrameRecievedEventArgs(frame));
+            }
+            
+            if (!_lastFrame.TryAdd(message.ID, frame)) {
+                _lastFrame[message.ID] = frame;
             }
         }
         else {
@@ -130,6 +170,16 @@ public class PeakCan : ICanDevice {
             MsgType = GetMessageType(frame.Id),
             DLC = frame.Dlc,
             Data = frame.Payload
+        };
+        return msg;
+    }
+
+    private static CanFrame BuildPcanMessage(PcanMessage frame, ulong timestamp) {
+        var msg = new CanFrame {
+            Id = frame.ID | (frame.MsgType == MessageType.Extended ? 0x80000000 : 0),
+            Dlc = frame.DLC,
+            Payload = frame.Data,
+            Timestamp = timestamp
         };
         return msg;
     }
@@ -152,17 +202,4 @@ public class PeakCan : ICanDevice {
     }
 
     private static uint GetId(uint id) => id & 0x7fffffff;
-
-    // private bool ReadMessage(out CanFrame frame)
-    // {
-    //     // We execute the "Read" function of the PCANBasic     
-    //     TPCANStatus stsResult = PCANBasic.Read(_handle, out TPCANMsg CANMsg, out TPCANTimestamp CANTimeStamp);
-    //     // if (stsResult != TPCANStatus.PCAN_ERROR_QRCVEMPTY)
-    //     // We process the received message
-    //     // ProcessMessageCan(CANMsg, CANTimeStamp);
-    //     // ulong microsTimestamp = Convert.ToUInt64(itsTimeStamp.micros + 1000 * itsTimeStamp.millis + 0x100000000 * 1000 * itsTimeStamp.millis_overflow);
-    //     frame = new CanFrame();
-    //     return true;
-    //     // return stsResult;
-    // }
 }
