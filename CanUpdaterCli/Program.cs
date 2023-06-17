@@ -16,6 +16,7 @@ var options = new OptionSet() {
     {"d|dbc=", "", s => filePathDbc = s},
     {"e|ecu=", "", s => ecuId = s},
     {"s|sw=", "", s => filePathSwPack = s},
+    {"h|help=","", s => { }}
 };
 List<string> extra;
 try {
