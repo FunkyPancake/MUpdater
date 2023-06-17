@@ -8,8 +8,11 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\CalTp\CalTp.csproj" />
       <ProjectReference Include="..\CanDriver\CanDriver.csproj" />
       <ProjectReference Include="..\CanUpdater\CanUpdater.csproj" />
+      <ProjectReference Include="..\DbcReader\DbcReader.csproj" />
+      <ProjectReference Include="..\FirmwarePack\FirmwarePack.csproj" />
     </ItemGroup>
 
     <ItemGroup>

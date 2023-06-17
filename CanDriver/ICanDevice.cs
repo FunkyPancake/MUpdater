@@ -11,7 +11,9 @@ public interface ICanDevice {
     public void SendFrames(IEnumerable<CanFrame> frames);
     public void StartSendFrameCyclic(CanFrame frame, int cycleTime);
     public void StopSendFrameCyclic(CanFrame frame);
-    public void SubscribeFrame(CanFrame frame, NewFrameReceivedEventHandler handler,bool createMessageQueue=false);
+    public void SubscribeFrame(CanFrame frame, NewFrameReceivedEventHandler handler);
+    public Queue<CanFrame> SubscribeFrameToQueue(CanFrame frame);
+    public Queue<CanFrame>? GetSubscribedFrameQueue(CanFrame frame);
     public void UnsubscribeFrame(CanFrame frame);
     public IEnumerable<CanFrame> GetFrames(CanFrame frame);
     public bool GetFrame(ref CanFrame frame);

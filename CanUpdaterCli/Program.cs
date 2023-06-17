@@ -12,9 +12,8 @@ var filePathSwPack = string.Empty;
 var ecuId = string.Empty;
 
 var logger = new LoggerConfiguration().WriteTo.Console().CreateLogger();
-var options = new OptionSet() {
+var options = new OptionSet {
     {"d|dbc=", "", s => filePathDbc = s},
-    {"e|ecu=", "", s => ecuId = s},
     {"s|sw=", "", s => filePathSwPack = s},
     {"h|help=","", s => { }}
 };
@@ -34,12 +33,12 @@ catch (OptionException e) {
 if (!CheckOptions(extra)) {
     return;
 }
-var dbcReader = new DbcReader(filePathDbc);
+var dbcReader = new DbcReader.DbcReader(filePathDbc);
+var swPackage = new FirmwarePack.FirmwarePack();
+await swPackage.ProcessFile(filePathSwPack);
 
 
-var cal = new CalibrationTp(dbcReader.GetCalFrames(ecuId));
-var swPackage = new SoftwarePackage(filePathSwPack);
-swPackage.ProcessFile();
+var cal = new CalTp.CalTp(dbcReader.GetCalFrames(swPackage.GetTargetEcu));
 if (!cal.Connect()) {
     return;
 }
@@ -51,6 +50,6 @@ if (!swPackage.CheckCompatibility(ecuData, swVersion)) {
     return;
 }
 
-cal.Program(swPackage);
+cal.Program(swPackage.Bin);
 cal.GetSwVersion();
 cal.Disconnect();

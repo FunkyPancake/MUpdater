@@ -22,7 +22,7 @@ public class PeakCan : ICanDevice {
         _worker.MessageAvailable += OnMessageAvailable;
         _worker.Start();
 
-        _logger.Information("Opened channel {Channel}, bitrate {Baudrate}", _handle, _config.Baudrate);
+        _logger.Information("Opened channel {Channel}, bitrate {Bitrate}", _handle, _config.Baudrate);
         return true;
     }
 
@@ -89,21 +89,27 @@ public class PeakCan : ICanDevice {
         }
     }
 
-    public void SubscribeFrame(CanFrame frame, ICanDevice.NewFrameReceivedEventHandler? handler = null,
-        bool createMessageQueue = false) {
-        if (handler is not null) {
-            _eventHandlers.Add(GetId(frame.Id), handler);
-            _logger.Information("Subscribe frame ID:{id:X}, event handler: {handler}", GetId(frame.Id),
-                nameof(handler));
+    public Queue<CanFrame> SubscribeFrameToQueue(CanFrame frame) {
+        if (_rxQueues.TryAdd(frame.Id, new Queue<CanFrame>()) || _rxQueues.ContainsKey(frame.Id)) {
+            return _rxQueues[frame.Id];
         }
 
-        if (createMessageQueue) {
-            _rxQueues.TryAdd(GetId(frame.Id), new Queue<CanFrame>());
-        }
+        _logger.Fatal("Frame cannot be subscribed to queue, frame ID:{id}", frame.Id);
+        throw new InvalidOperationException("Frame cannot be added to queue");
+    }
+
+    public Queue<CanFrame>? GetSubscribedFrameQueue(CanFrame frame) {
+        return _rxQueues.ContainsKey(frame.Id) ? _rxQueues[frame.Id] : null;
+    }
+
+    public void SubscribeFrame(CanFrame frame, ICanDevice.NewFrameReceivedEventHandler handler) {
+        _eventHandlers.Add(frame.Id, handler);
+        _logger.Information("Subscribe frame ID:{id:X}, event handler: {handler}", frame.Id,
+            nameof(handler));
     }
 
     public void UnsubscribeFrame(CanFrame frame) {
-        var id = GetId(frame.Id);
+        var id = frame.Id;
         if (_eventHandlers.ContainsKey(id)) {
             _eventHandlers.Remove(id);
         }
@@ -113,12 +119,12 @@ public class PeakCan : ICanDevice {
             _rxQueues.Remove(id);
         }
 
-        _logger.Information("Unsubscribe frame ID:{id:X}", GetId(frame.Id));
+        _logger.Information("Unsubscribe frame ID:{id:X}", frame.Id);
     }
 
     public IEnumerable<CanFrame> GetFrames(CanFrame frame) {
         var list = new List<CanFrame>();
-        var id = GetId(frame.Id);
+        var id = frame.Id;
         if (!_rxQueues.TryGetValue(id, out var queue))
             return list;
 
@@ -145,16 +151,16 @@ public class PeakCan : ICanDevice {
     private void OnMessageAvailable(object? sender, MessageAvailableEventArgs e) {
         if (_worker.Dequeue(e.QueueIndex, out var message, out var timestamp)) {
             var frame = BuildPcanMessage(message, timestamp);
-            if (_rxQueues.TryGetValue(message.ID, out var queue)) {
+            if (_rxQueues.TryGetValue(frame.Id, out var queue)) {
                 queue.Enqueue(frame);
             }
 
-            if (_eventHandlers.TryGetValue(message.ID, out var ev)) {
+            if (_eventHandlers.TryGetValue(frame.Id, out var ev)) {
                 ev.Invoke(this, new NewFrameRecievedEventArgs(frame));
             }
-            
-            if (!_lastFrame.TryAdd(message.ID, frame)) {
-                _lastFrame[message.ID] = frame;
+
+            if (!_lastFrame.TryAdd(frame.Id, frame)) {
+                _lastFrame[frame.Id] = frame;
             }
         }
         else {
@@ -198,6 +204,4 @@ public class PeakCan : ICanDevice {
         const uint extIdFlag = 0x80000000;
         return (id & extIdFlag) == extIdFlag ? MessageType.Extended : MessageType.Standard;
     }
-
-    private static uint GetId(uint id) => id & 0x7fffffff;
 }
