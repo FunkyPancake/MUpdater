@@ -20,6 +20,12 @@ namespace CanUpdaterGui
         public uint Id { get; set; }
         public byte[] Payload { get; set; } = null!;
         public DateTime Timestamp { get; set; }
+        public FrameDirection Direction { get; set; }
+    }
+
+    public enum FrameDirection {
+        Tx,
+        Rx
     }
 
     /// <summary>

@@ -8,6 +8,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\CanDriver\CanDriver.csproj" />
       <ProjectReference Include="..\CanUpdater\CanUpdater.csproj" />
     </ItemGroup>
 
