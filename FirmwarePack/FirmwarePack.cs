@@ -1,10 +1,13 @@
-﻿using System.Collections.ObjectModel;
-using System.IO.Compression;
+﻿using System.IO.Compression;
+using System.Security;
+using System.Security.Cryptography;
+using IntelHex;
+using Serilog;
 
 namespace FirmwarePack;
 
-/* swPack structure
- * SwPack.msw
+/* fwPack structure
+ * fwPack.msw
  *  -> Manifest.xml
  *      -> Target Ecu
  *      -> Compatible Hardware Versions
@@ -14,32 +17,58 @@ namespace FirmwarePack;
  *  -> Hex file
 */
 public class FirmwarePack {
-    public FirmwarePack() {
+    private readonly ILogger _logger;
+
+    public FirmwarePack(ILogger logger) {
+        _logger = logger;
     }
 
-    public async Task ProcessFile(string filePath) {
+    public async Task WritePack(string outputDir,string hexPath, Version swVersion, string ecuName, List<Version> hwCompatibility,
+        SecureString privateKey) {
+        Guard
+    }
+
+    public async Task ReadPack(string filePath) {
         //check file exists and extension matches
-        
+
         //unpack
         var stream = await DecryptPackage(filePath);
-        using var zip = ZipFile.Open(filePath, ZipArchiveMode.Read);
-        var entries = zip.Entries;        
+        using var zip = new ZipArchive(stream, ZipArchiveMode.Read, false);
+        var signature = zip.GetEntry("signature.sig");
+        var manifest = zip.GetEntry("manifest.xml");
+        var hex = zip.GetEntry("sw.hex");
+        if (zip.Entries.Count != 3 || hex is null || manifest is null || signature is null) {
+            throw new ApplicationException("");
+        }
+
         //calc signature
-        CheckSignature(entries);
+        if (await CheckSignature(signature, manifest, hex) == false) {
+            throw new ApplicationException("");
+        }
+
         //read metadata
-        ParseMetadata(entries);
-        ExtractHex(entries);
+        await GetMetadata(manifest);
+        await GetHex(hex);
     }
 
-    private void ExtractHex(ReadOnlyCollection<ZipArchiveEntry> entries) {
-        throw new NotImplementedException();
+    private async Task<bool> CheckSignature(ZipArchiveEntry sigEntry, ZipArchiveEntry manifest, ZipArchiveEntry hex) {
+        var sig = await new StreamReader(sigEntry.Open()).ReadToEndAsync();
+        var memoryStream = new MemoryStream();
+        await hex.Open().CopyToAsync(memoryStream);
+        await manifest.Open().CopyToAsync(memoryStream);
+        using var rsa = RSA.Create();
+        return rsa.VerifyData(memoryStream.GetBuffer(), Convert.FromBase64String(sig), HashAlgorithmName.SHA256,
+            RSASignaturePadding.Pkcs1);
     }
 
-    private void ParseMetadata(ReadOnlyCollection<ZipArchiveEntry> entries) {
-        throw new NotImplementedException();
+    private async Task GetHex(ZipArchiveEntry zipArchiveEntry) {
+        Hex = await HexIo.ReadAsync(zipArchiveEntry.Open());
     }
 
-    public byte[] Hex { get; private set; } = Array.Empty<byte>();
+    private async Task GetMetadata(ZipArchiveEntry zipArchiveEntry) {
+    }
+
+    public Hex Hex { get; private set; } = new Hex();
     public string TargetEcu { get; private set; } = string.Empty;
     public DateTime ReleaseDate { get; private set; }
     public Version SwVersion { get; } = new Version();
@@ -49,7 +78,14 @@ public class FirmwarePack {
     }
 
 
-    private async Task<Stream> DecryptPackage() {
+    private async Task<Stream> DecryptPackage(string fileName) {
+        var stream = new FileStream(fileName, FileMode.Open);
+        using var aes = Aes.Create();
+        byte[] key;
+        stream.Read();
+        using var cryptoStream = new CryptoStream(stream, aes.CreateDecryptor(key), CryptoStreamMode.Read)
+        using var streamReader = new StreamReader(cryptoStream);
+        return streamReader.BaseStream;
     }
 
     private async Task<bool> CheckSignature() {

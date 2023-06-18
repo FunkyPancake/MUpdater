@@ -35,7 +35,7 @@ if (!CheckOptions(extra)) {
 }
 var dbcReader = new DbcReader.DbcReader(filePathDbc);
 var swPackage = new FirmwarePack.FirmwarePack();
-await swPackage.ProcessFile(filePathSwPack);
+await swPackage.ReadPack(filePathSwPack);
 
 
 var cal = new CalTp.CalTp(dbcReader.GetCalFrames(swPackage.GetTargetEcu));
