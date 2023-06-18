@@ -18,22 +18,27 @@ public class FirmwarePackWriter : Base {
         string privateKey) {
         // Guard.Against.FileNotFound(hexPath, nameof(hexPath));
 
-        var zipStream = new FileStream(Path.Combine(outputDir, $"{ecuName}_{swVersion}.{FwPackExtension}"),
-            FileMode.CreateNew);
-        var zip = new ZipArchive(zipStream, ZipArchiveMode.Create);
-        zip.CreateEntryFromFile(hexPath, FwFileName);
+        await using var zipStream = new FileStream(Path.Combine(outputDir, $"{ecuName}_{swVersion}.{FwPackExtension}"),
+            FileMode.Create);
+        using var zip = new ZipArchive(zipStream, ZipArchiveMode.Create);
+        // zip.CreateEntryFromFile(hexPath, FwFileName);
+
         var manifestEntry = zip.CreateEntry(ManifestFileName);
-        var sigEntry = zip.CreateEntry(SignatureFileName);
         await GenerateMetadata(manifestEntry);
-        await GenerateSignature(sigEntry);
-        zipStream.Close();
+
+        // var sigEntry = zip.CreateEntry(SignatureFileName);
+        // await GenerateSignature(sigEntry);
     }
 
 
     private async Task GenerateMetadata(ZipArchiveEntry zipArchiveEntry) {
         var xml = new XmlDocument();
-
-        xml.Save(zipArchiveEntry.Open());
+        await using var writer = new StreamWriter(zipArchiveEntry.Open());
+        // var xd =new XmlTextWriter(writer);
+        xml.AppendChild(xml.CreateElement("item", "b", null));
+        await writer.WriteLineAsync("abc");
+        // await writer.WriteAsync(xml.OuterXml);
+        // xml.Save(xd);
     }
 
     private async Task GenerateSignature(ZipArchiveEntry zipArchiveEntry) {
