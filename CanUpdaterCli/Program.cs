@@ -34,11 +34,11 @@ if (!CheckOptions(extra)) {
     return;
 }
 var dbcReader = new DbcReader.DbcReader(filePathDbc);
-var swPackage = new FirmwarePack.FirmwarePack();
-await swPackage.ReadPack(filePathSwPack);
+var swPackage = new FirmwarePack.FirmwarePackReader(logger);
+await swPackage.Load(filePathSwPack);
 
 
-var cal = new CalTp.CalTp(dbcReader.GetCalFrames(swPackage.GetTargetEcu));
+var cal = new CalTp.CalTp(dbcReader.GetCalFrames(swPackage.TargetEcu));
 if (!cal.Connect()) {
     return;
 }
@@ -50,6 +50,6 @@ if (!swPackage.CheckCompatibility(ecuData, swVersion)) {
     return;
 }
 
-cal.Program(swPackage.Bin);
+cal.Program(swPackage.Hex);
 cal.GetSwVersion();
 cal.Disconnect();

@@ -2,7 +2,7 @@
 
 public class CalTp {
 
-    public CalTp((CanFrame tx,CanFrame rx)) {
+    public CalTp((int tx,int rx) tp) {
         throw new NotImplementedException();
     }
 
@@ -18,7 +18,7 @@ public class CalTp {
         throw new NotImplementedException();
     }
 
-    public void Program(string swPackage) {
+    public void Program(IntelHex.Hex swPackage) {
         throw new NotImplementedException();
     }
 

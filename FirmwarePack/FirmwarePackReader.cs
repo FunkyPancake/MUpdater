@@ -1,34 +1,23 @@
-﻿using System.IO.Compression;
-using System.Security;
+using System.IO.Compression;
 using System.Security.Cryptography;
 using IntelHex;
 using Serilog;
 
 namespace FirmwarePack;
 
-/* fwPack structure
- * fwPack.msw
- *  -> Manifest.xml
- *      -> Target Ecu
- *      -> Compatible Hardware Versions
- *      -> Release date
- *      -> Sw Version
- *  -> Cert file
- *  -> Hex file
-*/
-public class FirmwarePack {
+public class FirmwarePackReader {
     private readonly ILogger _logger;
 
-    public FirmwarePack(ILogger logger) {
+    public FirmwarePackReader(ILogger logger) {
         _logger = logger;
     }
 
-    public async Task WritePack(string outputDir,string hexPath, Version swVersion, string ecuName, List<Version> hwCompatibility,
-        SecureString privateKey) {
-        Guard
-    }
+    public Hex Hex { get; private set; } = new Hex();
+    public string TargetEcu { get; private set; } = string.Empty;
+    public DateTime ReleaseDate { get; private set; }
+    public Version SwVersion { get; } = new Version();
 
-    public async Task ReadPack(string filePath) {
+    public async Task Load(string filePath) {
         //check file exists and extension matches
 
         //unpack
@@ -68,11 +57,6 @@ public class FirmwarePack {
     private async Task GetMetadata(ZipArchiveEntry zipArchiveEntry) {
     }
 
-    public Hex Hex { get; private set; } = new Hex();
-    public string TargetEcu { get; private set; } = string.Empty;
-    public DateTime ReleaseDate { get; private set; }
-    public Version SwVersion { get; } = new Version();
-
     public bool CheckEcuCompatibility() {
         return true;
     }
@@ -82,16 +66,18 @@ public class FirmwarePack {
         var stream = new FileStream(fileName, FileMode.Open);
         using var aes = Aes.Create();
         byte[] key;
-        stream.Read();
-        using var cryptoStream = new CryptoStream(stream, aes.CreateDecryptor(key), CryptoStreamMode.Read)
-        using var streamReader = new StreamReader(cryptoStream);
-        return streamReader.BaseStream;
+        // stream.Read();
+        // using var cryptoStream = new CryptoStream(stream, aes.CreateDecryptor(key), CryptoStreamMode.Read);
+        // using var streamReader = new StreamReader(cryptoStream);
+        // return streamReader.BaseStream;
+        return null;
     }
 
     private async Task<bool> CheckSignature() {
+        return true;
     }
-}
 
-public struct Version {
-    public uint Major, Minor, Patch;
+    public bool CheckCompatibility(object ecuData, (object hwVersion, object swVersion) swVersion) {
+        throw new NotImplementedException();
+    }
 }
