@@ -6,6 +6,14 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <RootNamespace>FwPackGen</RootNamespace>
+        <AssemblyName>FwPackGen</AssemblyName>
+        <IsPackable>false</IsPackable>
+        <Title>FwPackGen</Title>
+        <Authors>MxDTuning</Authors>
+        <Company>MxDTuning</Company>
+        <Product>FwPackGen</Product>
+        <AssemblyVersion>1.0.0</AssemblyVersion>
+        <FileVersion>1.0.0</FileVersion>
     </PropertyGroup>
 
     <ItemGroup>

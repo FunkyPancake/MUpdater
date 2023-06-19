@@ -11,7 +11,11 @@ var logger = new LoggerConfiguration().WriteTo.Console().CreateLogger();
 var ecuName = string.Empty;
 var swVersion = new Version();
 var key = new SecureString();
-
+/*TODO
+    -> write help and option comments
+    -> add rest of the checks for parameters
+    -> exception handling with logger and returns
+*/
 var options = new OptionSet {
     {"e|ecu=", "", s => ecuName = s}, {
         "s|sw=", "", s => {
