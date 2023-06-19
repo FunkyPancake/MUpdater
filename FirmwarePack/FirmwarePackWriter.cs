@@ -1,5 +1,8 @@
 using System.IO.Compression;
+using System.Net;
+using System.Security;
 using System.Security.Cryptography;
+using System.Text;
 using System.Xml;
 using Serilog;
 
@@ -15,46 +18,59 @@ public class FirmwarePackWriter : Base {
 
     public async Task<bool> Save(string outputDir, string hexPath, Version swVersion, string ecuName,
         List<Version> hwCompatibility,
-        string privateKey) {
-        // Guard.Against.FileNotFound(hexPath, nameof(hexPath));
+        SecureString privateKey) {
         if (!File.Exists(hexPath)) {
             _logger.Error("Path to Intel-hex file is incorrect.");
             return false;
         }
+
         if (hwCompatibility.Count == 0) {
             _logger.Error("Software has to be compatible with at least one hw version");
             return false;
         }
+
         if (ecuName == string.Empty) {
             _logger.Error("Empty ecu name.");
             return false;
         }
-        
+
+        if (privateKey.Length == 0) {
+            _logger.Error("Empty private key.");
+            return false;
+        }
+
         await using var zipStream = new FileStream(Path.Combine(outputDir, $"{ecuName}-{swVersion}.{FwPackExtension}"),
             FileMode.Create);
         using var zip = new ZipArchive(zipStream, ZipArchiveMode.Create);
-        var hexEntry = zip.CreateEntryFromFile(hexPath, FwFileName);
+        zip.CreateEntryFromFile(hexPath, FwFileName);
 
         var manifestEntry = zip.CreateEntry(ManifestFileName);
-        await GenerateMetadata(manifestEntry, swVersion, ecuName, hwCompatibility);
+        var metadata = await GenerateMetadata(manifestEntry, swVersion, ecuName, hwCompatibility);
 
         var sigEntry = zip.CreateEntry(SignatureFileName);
-        await GenerateSignature(sigEntry, manifestEntry, FwFileName, privateKey);
-        _logger.Information("Software pack for {0} generated successfully. Version {1}.",ecuName,swVersion);
+        await GenerateSignature(sigEntry, metadata, FwFileName, privateKey);
+        _logger.Information("Software pack for {0} generated successfully. Version {1}.", ecuName, swVersion);
         return true;
     }
 
-    private static async Task GenerateSignature(ZipArchiveEntry signatureEntry, ZipArchiveEntry manifestEntry,
-        string hexEntry, string key) {
+    private static async Task GenerateSignature(ZipArchiveEntry signatureEntry, byte[] metadata,
+        string hexEntry, SecureString key) {
         await using var writer = new StreamWriter(signatureEntry.Open());
-        var data = await File.ReadAllBytesAsync(hexEntry);
-        using var rsa = RSA.Create();
-        var signData = rsa.SignData(data, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
+        
+        var hex = await File.ReadAllBytesAsync(hexEntry);
+        var data = new byte[hex.Length + metadata.Length];
+        hex.CopyTo(data,0);
+        metadata.CopyTo(data,hex.Length);
+        var rsa = RSA.Create();
+
+        rsa.ImportFromPem(new NetworkCredential("", key).Password);
+
+        var signData = rsa.SignData(data!, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
         await writer.WriteLineAsync(Convert.ToBase64String(signData));
         await writer.FlushAsync();
     }
 
-    private async Task GenerateMetadata(ZipArchiveEntry zipArchiveEntry, Version swVersion, string ecuName,
+    private async Task<byte[]> GenerateMetadata(ZipArchiveEntry zipArchiveEntry, Version swVersion, string ecuName,
         List<Version> hwCompatibility) {
         var xml = new XmlDocument();
         await using var writer = new StreamWriter(zipArchiveEntry.Open());
@@ -76,6 +92,7 @@ public class FirmwarePackWriter : Base {
         metadata.AppendChild(hwElement);
         await writer.WriteAsync(xml.OuterXml);
         await writer.FlushAsync();
+        return Encoding.UTF8.GetBytes(xml.OuterXml);
     }
 
     private static void AddStringAttribute(XmlDocument doc, XmlNode parent, string name, string value) {
