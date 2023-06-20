@@ -39,35 +39,42 @@ public class FirmwarePackWriter : Base {
             return false;
         }
 
-        await using var zipStream = new FileStream(Path.Combine(outputDir, $"{ecuName}-{swVersion}.{FwPackExtension}"),
-            FileMode.Create);
-        using var zip = new ZipArchive(zipStream, ZipArchiveMode.Create);
-        zip.CreateEntryFromFile(hexPath, FwFileName);
+        var outFileName = Path.Combine(outputDir, $"{ecuName}-{swVersion}.{FwPackExtension}");
+        await using (var zipStream = new FileStream(outFileName, FileMode.Create)) {
+            using (var zip = new ZipArchive(zipStream, ZipArchiveMode.Create)) {
+                zip.CreateEntryFromFile(hexPath, FwFileName);
 
-        var manifestEntry = zip.CreateEntry(ManifestFileName);
-        var metadata = await GenerateMetadata(manifestEntry, swVersion, ecuName, hwCompatibility);
+                var manifestEntry = zip.CreateEntry(ManifestFileName);
+                var metadata = await GenerateMetadata(manifestEntry, swVersion, ecuName, hwCompatibility);
 
-        var sigEntry = zip.CreateEntry(SignatureFileName);
-        await GenerateSignature(sigEntry, metadata, FwFileName, privateKey);
+                var sigEntry = zip.CreateEntry(SignatureFileName);
+                await GenerateSignature(sigEntry, metadata, FwFileName, privateKey);
+                await zipStream.FlushAsync();
+            }
+        }
+
+        EncryptFile(outFileName, CryptoData.AesKey);
         _logger.Information("Software pack for {0} generated successfully. Version {1}.", ecuName, swVersion);
         return true;
     }
 
-    private static async Task GenerateSignature(ZipArchiveEntry signatureEntry, byte[] metadata,
+    private async Task GenerateSignature(ZipArchiveEntry signatureEntry, byte[] metadata,
         string hexEntry, SecureString key) {
         await using var writer = new StreamWriter(signatureEntry.Open());
-        
+
         var hex = await File.ReadAllBytesAsync(hexEntry);
         var data = new byte[hex.Length + metadata.Length];
-        hex.CopyTo(data,0);
-        metadata.CopyTo(data,hex.Length);
+        hex.CopyTo(data, 0);
+        metadata.CopyTo(data, hex.Length);
         var rsa = RSA.Create();
 
         rsa.ImportFromPem(new NetworkCredential("", key).Password);
 
         var signData = rsa.SignData(data!, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
-        await writer.WriteLineAsync(Convert.ToBase64String(signData));
+        var signature = Convert.ToBase64String(signData);
+        await writer.WriteLineAsync(signature);
         await writer.FlushAsync();
+        _logger.Information("Signature: {}.", signature);
     }
 
     private async Task<byte[]> GenerateMetadata(ZipArchiveEntry zipArchiveEntry, Version swVersion, string ecuName,

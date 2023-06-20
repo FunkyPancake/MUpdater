@@ -5,7 +5,7 @@ using Serilog;
 
 namespace FirmwarePack;
 
-public class FirmwarePackReader {
+public class FirmwarePackReader : Base {
     private readonly ILogger _logger;
 
     public FirmwarePackReader(ILogger logger) {
@@ -21,23 +21,24 @@ public class FirmwarePackReader {
         //check file exists and extension matches
 
         //unpack
-        var stream = await DecryptPackage(filePath);
-        using var zip = new ZipArchive(stream, ZipArchiveMode.Read, false);
-        var signature = zip.GetEntry("signature.sig");
-        var manifest = zip.GetEntry("manifest.xml");
-        var hex = zip.GetEntry("sw.hex");
-        if (zip.Entries.Count != 3 || hex is null || manifest is null || signature is null) {
-            throw new ApplicationException("");
-        }
-
-        //calc signature
-        if (await CheckSignature(signature, manifest, hex) == false) {
-            throw new ApplicationException("");
-        }
-
-        //read metadata
-        await GetMetadata(manifest);
-        await GetHex(hex);
+        // var stream = await DecryptPackage(filePath);
+        DecryptFile(filePath, CryptoData.AesKey);
+        // using var zip = new ZipArchive(stream, ZipArchiveMode.Read, false);
+        // var signature = zip.GetEntry("signature.sig");
+        // var manifest = zip.GetEntry("manifest.xml");
+        // var hex = zip.GetEntry("sw.hex");
+        // if (zip.Entries.Count != 3 || hex is null || manifest is null || signature is null) {
+        //     throw new ApplicationException("");
+        // }
+        //
+        // //calc signature
+        // if (await CheckSignature(signature, manifest, hex) == false) {
+        //     throw new ApplicationException("");
+        // }
+        //
+        // //read metadata
+        // await GetMetadata(manifest);
+        // await GetHex(hex);
     }
 
     private async Task<bool> CheckSignature(ZipArchiveEntry sigEntry, ZipArchiveEntry manifest, ZipArchiveEntry hex) {
