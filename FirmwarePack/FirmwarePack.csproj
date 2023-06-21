@@ -26,8 +26,6 @@ public abstract partial class Base
     </PropertyGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\CommonTypes\CommonTypes.csproj" />
-        <ProjectReference Include="..\IntelHex\IntelHex.csproj" />
         <ProjectReference Include="..\MCommon\CommonTypes\CommonTypes.csproj" />
         <ProjectReference Include="..\MCommon\IntelHex\IntelHex.csproj" />
     </ItemGroup>
