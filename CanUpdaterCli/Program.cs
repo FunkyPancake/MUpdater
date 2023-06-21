@@ -1,6 +1,5 @@
 ﻿// See https://aka.ms/new-console-template for more information
 
-using FirmwarePack;
 using Mono.Options;
 using Serilog;
 
@@ -32,23 +31,23 @@ catch (OptionException e) {
 // if (!CheckOptions(extra)) {
 //     return;
 // }
-var dbcReader = new DbcReader.DbcReader(filePathDbc);
+// var dbcReader = new DbcReader.DbcReader(filePathDbc);
 var swPackage = new FirmwarePack.FirmwarePackReader(logger);
 await swPackage.Load(filePathSwPack);
 logger.Information("data from the package:{0},{1},{2}", swPackage.SwVersion,swPackage.TargetEcu,swPackage.ReleaseDate);
 
-var cal = new CalTp.CalTp(dbcReader.GetCalFrames(swPackage.TargetEcu));
-if (!cal.Connect()) {
-    return;
-}
+// var cal = new CalTp.CalTp(dbcReader.GetCalFrames(swPackage.TargetEcu));
+// if (!cal.Connect()) {
+//     return;
+// }
 
-var ecuData = cal.GetEcuIdent();
-var swVersion = cal.GetSwVersion();
-if (!swPackage.CheckCompatibility(ecuData, swVersion)) {
-    cal.Disconnect();
-    return;
-}
-
-cal.Program(swPackage.Hex);
-cal.GetSwVersion();
-cal.Disconnect();
+// var ecuData = cal.GetEcuIdent();
+// var swVersion = cal.GetSwVersion();
+// if (!swPackage.CheckCompatibility(ecuData, swVersion)) {
+//     cal.Disconnect();
+//     return;
+// }
+//
+// cal.Program(swPackage.Hex);
+// cal.GetSwVersion();
+// cal.Disconnect();

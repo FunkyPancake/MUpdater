@@ -80,6 +80,6 @@ public class FirmwarePackReader : Base {
 
 
     public bool CheckCompatibility(EcuIdent ecuIdent,CommonTypes.Version version) {
-        return _hwCompatibility.Contains(ecuIdent.HwVersion) && SwVersion.Major > version.Major && ecuIdent.EcuName.Equals(TargetEcu);
+        return _hwCompatibility.Contains(ecuIdent.HwVersion) && ecuIdent.EcuName.Equals(TargetEcu);
     }
 }

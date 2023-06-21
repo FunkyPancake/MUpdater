@@ -8,7 +8,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\CalTp\CalTp.csproj" />
+      <ProjectReference Include="..\CalibrationProtocol\CalibrationProtocol.csproj" />
       <ProjectReference Include="..\CanDriver\CanDriver.csproj" />
       <ProjectReference Include="..\DbcReader\DbcReader.csproj" />
       <ProjectReference Include="..\FirmwarePack\FirmwarePack.csproj" />
@@ -17,6 +17,12 @@
     <ItemGroup>
       <PackageReference Include="Mono.Options" Version="6.12.0.148" />
       <PackageReference Include="Serilog.Sinks.Console" Version="4.1.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Reference Include="CommonTypes">
+        <HintPath>bin\Debug\net6.0\CommonTypes.dll</HintPath>
+      </Reference>
     </ItemGroup>
 
 </Project>
