@@ -26,10 +26,4 @@
       <ProjectReference Include="..\FirmwarePack\FirmwarePack.csproj" />
     </ItemGroup>
 
-    <ItemGroup>
-      <Reference Include="CommonTypes">
-        <HintPath>..\..\MCalCommon\CommonTypes\bin\Release\net6.0\CommonTypes.dll</HintPath>
-      </Reference>
-    </ItemGroup>
-
 </Project>

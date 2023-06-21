@@ -8,6 +8,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FwPackGenCli", "FwPackGenCl
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FirmwarePackTests", "FirmwarePackTests\FirmwarePackTests.csproj", "{1E1F2457-D2E1-4222-9084-634E8436C167}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IntelHex", "MCommon\IntelHex\IntelHex.csproj", "{D32E47F7-BB7D-420C-980D-AC5013558CAE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommonTypes", "MCommon\CommonTypes\CommonTypes.csproj", "{5BA595EC-A33C-41DC-9320-AB9DAE5F5658}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -30,5 +34,13 @@ Global
 		{1E1F2457-D2E1-4222-9084-634E8436C167}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1E1F2457-D2E1-4222-9084-634E8436C167}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1E1F2457-D2E1-4222-9084-634E8436C167}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D32E47F7-BB7D-420C-980D-AC5013558CAE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D32E47F7-BB7D-420C-980D-AC5013558CAE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D32E47F7-BB7D-420C-980D-AC5013558CAE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D32E47F7-BB7D-420C-980D-AC5013558CAE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5BA595EC-A33C-41DC-9320-AB9DAE5F5658}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5BA595EC-A33C-41DC-9320-AB9DAE5F5658}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5BA595EC-A33C-41DC-9320-AB9DAE5F5658}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5BA595EC-A33C-41DC-9320-AB9DAE5F5658}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
