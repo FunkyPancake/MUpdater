@@ -1,6 +1,6 @@
 ﻿// See https://aka.ms/new-console-template for more information
 
-using CanUpdaterCli;
+using FirmwarePack;
 using Mono.Options;
 using Serilog;
 
@@ -10,7 +10,6 @@ bool CheckOptions(List<string> list) {
 var filePathDbc = string.Empty;
 var filePathSwPack = string.Empty;
 var ecuId = string.Empty;
-
 var logger = new LoggerConfiguration().WriteTo.Console().CreateLogger();
 var options = new OptionSet {
     {"d|dbc=", "", s => filePathDbc = s},
@@ -30,13 +29,13 @@ catch (OptionException e) {
     return;
 }
 
-if (!CheckOptions(extra)) {
-    return;
-}
+// if (!CheckOptions(extra)) {
+//     return;
+// }
 var dbcReader = new DbcReader.DbcReader(filePathDbc);
 var swPackage = new FirmwarePack.FirmwarePackReader(logger);
 await swPackage.Load(filePathSwPack);
-
+logger.Information("data from the package:{0},{1},{2}", swPackage.SwVersion,swPackage.TargetEcu,swPackage.ReleaseDate);
 
 var cal = new CalTp.CalTp(dbcReader.GetCalFrames(swPackage.TargetEcu));
 if (!cal.Connect()) {

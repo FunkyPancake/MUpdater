@@ -16,8 +16,8 @@ public class FirmwarePackWriter : Base {
         _logger = logger;
     }
 
-    public async Task<bool> Save(string outputDir, string hexPath, Version swVersion, string ecuName,
-        List<Version> hwCompatibility,
+    public async Task<bool> Save(string outputDir, string hexPath, CommonTypes.Version swVersion, string ecuName,
+        List<CommonTypes.Version> hwCompatibility,
         SecureString privateKey) {
         if (!File.Exists(hexPath)) {
             _logger.Error("Path to Intel-hex file is incorrect.");
@@ -53,7 +53,7 @@ public class FirmwarePackWriter : Base {
             }
         }
 
-        EncryptFile(outFileName, CryptoData.AesKey);
+        EncryptFile(outFileName, AesKey);
         _logger.Information("Software pack for {0} generated successfully. Version {1}.", ecuName, swVersion);
         return true;
     }
@@ -64,21 +64,21 @@ public class FirmwarePackWriter : Base {
 
         var hex = await File.ReadAllBytesAsync(hexEntry);
         var data = new byte[hex.Length + metadata.Length];
-        hex.CopyTo(data, 0);
-        metadata.CopyTo(data, hex.Length);
+        metadata.CopyTo(data, 0);
+        hex.CopyTo(data, metadata.Length);
         var rsa = RSA.Create();
 
         rsa.ImportFromPem(new NetworkCredential("", key).Password);
 
-        var signData = rsa.SignData(data!, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
+        var signData = rsa.SignData(data, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
         var signature = Convert.ToBase64String(signData);
         await writer.WriteLineAsync(signature);
         await writer.FlushAsync();
-        _logger.Information("Signature: {}.", signature);
+        _logger.Debug("Signature: {0}.", signature);
     }
 
-    private async Task<byte[]> GenerateMetadata(ZipArchiveEntry zipArchiveEntry, Version swVersion, string ecuName,
-        List<Version> hwCompatibility) {
+    private  async Task<byte[]> GenerateMetadata(ZipArchiveEntry zipArchiveEntry, CommonTypes.Version swVersion, string ecuName,
+        List<CommonTypes.Version> hwCompatibility) {
         var xml = new XmlDocument();
         await using var writer = new StreamWriter(zipArchiveEntry.Open());
         var root = xml.DocumentElement;
@@ -86,14 +86,18 @@ public class FirmwarePackWriter : Base {
         xml.InsertBefore(xmlDeclaration, root);
         var metadata = xml.CreateElement(string.Empty, "manifest", string.Empty);
         xml.AppendChild(metadata);
+        _logger.Debug("");
 
-        AddStringAttribute(xml, metadata, "ecuName", ecuName);
-        AddStringAttribute(xml, metadata, "version", swVersion.ToString());
-        AddStringAttribute(xml, metadata, "releaseDate", DateTime.Now.ToShortDateString());
+        AddStringAttribute(xml, metadata, EcuNameNodeName, ecuName);
 
-        var hwElement = xml.CreateElement(string.Empty, "hwCompatibility", string.Empty);
+        AddStringAttribute(xml, metadata, VersionNodeName, swVersion.ToString());
+
+
+        AddStringAttribute(xml, metadata, ReleaseDateNodeName, DateTime.Now.ToShortDateString());
+
+        var hwElement = xml.CreateElement(string.Empty, HwCompatibilityNodeName, string.Empty);
         foreach (var version in hwCompatibility) {
-            AddStringAttribute(xml, hwElement, "version", version.ToString());
+            AddStringAttribute(xml, hwElement, VersionNodeName, version.ToString());
         }
 
         metadata.AppendChild(hwElement);

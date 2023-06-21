@@ -6,9 +6,4 @@
         <Nullable>enable</Nullable>
     </PropertyGroup>
 
-    <ItemGroup>
-      <ProjectReference Include="..\CommonTypes\CommonTypes.csproj" />
-      <ProjectReference Include="..\IntelHex\IntelHex.csproj" />
-    </ItemGroup>
-
 </Project>

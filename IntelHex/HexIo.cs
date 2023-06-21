@@ -20,7 +20,9 @@ public static class HexIo {
 
     public static async Task<Hex> ReadAsync(Stream stream) {
         var hex = new Hex();
+        stream.Seek(0, SeekOrigin.Begin);
         var streamReader = new StreamReader(stream);
+
         while (await streamReader.ReadLineAsync() is { } line) {
             ParseHexLine(hex, line);
         }

@@ -10,11 +10,11 @@ public class CalTp {
         return true;
     }
 
-    public object GetEcuIdent() {
+    public CommonTypes.EcuIdent GetEcuIdent() {
         throw new NotImplementedException();
     }
 
-    public (object hwVersion, object swVersion) GetSwVersion() {
+    public CommonTypes.Version GetSwVersion() {
         throw new NotImplementedException();
     }
 
@@ -25,6 +25,11 @@ public class CalTp {
     public void Disconnect() {
         throw new NotImplementedException();
     }
+}
+
+public struct EcuIdent {
+    public string EcuName { get; }
+    public Version hwVersion { get; }
 }
 
 public class CanFrame {

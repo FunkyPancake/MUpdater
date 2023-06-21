@@ -5,11 +5,10 @@ using System.Security;
 using FirmwarePack;
 using Mono.Options;
 using Serilog;
-using Version = FirmwarePack.Version;
 
 var logger = new LoggerConfiguration().WriteTo.Console().CreateLogger();
 var ecuName = string.Empty;
-var swVersion = new Version();
+var swVersion = new CommonTypes.Version();
 var key = new SecureString();
 /*TODO
     -> write help and option comments
@@ -20,7 +19,7 @@ var options = new OptionSet {
     {"e|ecu=", "", s => ecuName = s}, {
         "s|sw=", "", s => {
             try {
-                swVersion = new Version(s);
+                swVersion = new CommonTypes.Version(s);
             }
             catch {
                 logger.Error("Version string in incorrect format. It has to be 'Major.Minor.Patch' format.");
@@ -60,6 +59,6 @@ catch (OptionException e) {
 
 var writer = new FirmwarePackWriter(logger);
 return await writer.Save("./", "./fw.hex", swVersion, ecuName,
-    new List<Version> {new("1.2.3"), new("2.0.1")}, key)
+    new List<CommonTypes.Version> {new("1.2.3"), new("2.0.1")}, key)
     ? 0
     : -1;

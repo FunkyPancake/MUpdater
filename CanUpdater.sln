@@ -18,6 +18,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FwPackGenCli", "FwPackGenCl
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FirmwarePackTests", "FirmwarePackTests\FirmwarePackTests.csproj", "{1E1F2457-D2E1-4222-9084-634E8436C167}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommonTypes", "CommonTypes\CommonTypes.csproj", "{55B0B96F-9DBC-435A-BF8D-D2012AE84720}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -60,5 +62,9 @@ Global
 		{1E1F2457-D2E1-4222-9084-634E8436C167}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1E1F2457-D2E1-4222-9084-634E8436C167}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1E1F2457-D2E1-4222-9084-634E8436C167}.Release|Any CPU.Build.0 = Release|Any CPU
+		{55B0B96F-9DBC-435A-BF8D-D2012AE84720}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{55B0B96F-9DBC-435A-BF8D-D2012AE84720}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{55B0B96F-9DBC-435A-BF8D-D2012AE84720}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{55B0B96F-9DBC-435A-BF8D-D2012AE84720}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

@@ -12,31 +12,35 @@ namespace FirmwarePack;
  *  -> Cert file
  *  -> Hex file
 */
-public abstract class Base {
+public abstract partial class Base {
     protected const string FwPackExtension = "mfw";
     protected const string FwFileName = "fw.hex";
     protected const string ManifestFileName = "manifest.xml";
     protected const string SignatureFileName = "signature.sig";
+    protected const string EcuNameNodeName = "ecuName";
+    protected const string VersionNodeName = "version";
+    protected const string ReleaseDateNodeName = "releaseDate";
+    protected const string HwCompatibilityNodeName = "hwCompatibility";
 
-    protected static void EncryptFile(string filePath, string keyString) {
+    protected async void EncryptFile(string filePath, string keyString) {
         var tempFileName = Path.GetTempFileName();
-        //TODO fix key lenght issue
+        //this is correct for keys generated with openssl, last 16 bytes are IV
         var key = Convert.FromBase64String(keyString)[..32];
         using (SymmetricAlgorithm cipher = Aes.Create())
-        using (var fileStream = File.OpenRead(filePath))
-        using (var tempFile = File.Create(tempFileName)) {
+        await using (var fileStream = File.OpenRead(filePath))
+        await using (var tempFile = File.Create(tempFileName)) {
             cipher.Key = key;
             // aes.IV will be automatically populated with a secure random value
             var iv = cipher.IV;
 
             // Write a marker header so we can identify how to read this file in the future
-            tempFile.Write(CryptoData.FileHeader);
+            await tempFile.WriteAsync(FileHeader);
 
-            tempFile.Write(iv, 0, iv.Length);
+            await tempFile.WriteAsync(iv);
 
-            using (var cryptoStream =
-                   new CryptoStream(tempFile, cipher.CreateEncryptor(), CryptoStreamMode.Write)) {
-                fileStream.CopyTo(cryptoStream);
+            await using (var cryptoStream =
+                         new CryptoStream(tempFile, cipher.CreateEncryptor(), CryptoStreamMode.Write)) {
+                await fileStream.CopyToAsync(cryptoStream);
             }
         }
 
@@ -44,54 +48,48 @@ public abstract class Base {
         File.Move(tempFileName, filePath);
     }
 
-    protected static void DecryptFile(string filePath, string keyString) {
-        var tempFileName = Path.GetTempFileName();
-        //TODO fix key lenght issue
+    protected async Task<MemoryStream> DecryptFileToStream(string filePath, string keyString) {
+        //this is correct for keys generated with openssl, last 16 bytes are IV
         var key = Convert.FromBase64String(keyString)[..32];
 
-        using (SymmetricAlgorithm cipher = Aes.Create())
-        using (var fileStream = File.OpenRead(filePath))
-        using (var tempFile = File.Create(tempFileName)) {
-            cipher.Key = key;
-            var iv = new byte[cipher.BlockSize / 8];
-            var headerBytes = new byte[CryptoData.FileHeader.Length];
-            var remain = headerBytes.Length;
+        using SymmetricAlgorithm cipher = Aes.Create();
+        await using var fileStream = File.OpenRead(filePath);
+        cipher.Key = key;
+        var iv = new byte[cipher.BlockSize / 8];
+        var headerBytes = new byte[FileHeader.Length];
+        var remain = headerBytes.Length;
 
-            while (remain != 0) {
-                var read = fileStream.Read(headerBytes, headerBytes.Length - remain, remain);
+        while (remain != 0) {
+            var read = await fileStream.ReadAsync(headerBytes.AsMemory(headerBytes.Length - remain, remain));
 
-                if (read == 0) {
-                    throw new EndOfStreamException();
-                }
-
-                remain -= read;
+            if (read == 0) {
+                throw new EndOfStreamException();
             }
 
-            if (!headerBytes.SequenceEqual(CryptoData.FileHeader)) {
-                throw new InvalidOperationException();
-            }
-
-            remain = iv.Length;
-
-            while (remain != 0) {
-                var read = fileStream.Read(iv, iv.Length - remain, remain);
-
-                if (read == 0) {
-                    throw new EndOfStreamException();
-                }
-
-                remain -= read;
-            }
-
-            cipher.IV = iv;
-
-            using (var cryptoStream =
-                   new CryptoStream(tempFile, cipher.CreateDecryptor(), CryptoStreamMode.Write)) {
-                fileStream.CopyTo(cryptoStream);
-            }
+            remain -= read;
         }
 
-        File.Delete(filePath);
-        File.Move(tempFileName, filePath);
+        if (!headerBytes.SequenceEqual(FileHeader)) {
+            throw new InvalidOperationException();
+        }
+
+        remain = iv.Length;
+
+        while (remain != 0) {
+            var read = await fileStream.ReadAsync(iv.AsMemory(iv.Length - remain, remain));
+
+            if (read == 0) {
+                throw new EndOfStreamException();
+            }
+
+            remain -= read;
+        }
+
+        cipher.IV = iv;
+
+        var mem = new MemoryStream();
+        await using var cryptoStream = new CryptoStream(fileStream, cipher.CreateDecryptor(), CryptoStreamMode.Read);
+        await cryptoStream.CopyToAsync(mem);
+        return mem;
     }
 }
