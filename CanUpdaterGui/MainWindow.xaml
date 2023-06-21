@@ -26,10 +26,13 @@
                 <MenuItem Header="_Save" />
             </MenuItem>
             <MenuItem Header="_Options">
+                <MenuItem Header="Connection configuration"></MenuItem>
                 <MenuItem Header="CAN configuration"></MenuItem>
             </MenuItem>
             <MenuItem Header="_Device">
-                <MenuItem Header=""></MenuItem>
+                <MenuItem Header="Connect"></MenuItem>
+                <MenuItem Header="Disconnect"></MenuItem>
+                <MenuItem Header="Program"></MenuItem>
             </MenuItem>
         </Menu>
         <Grid Grid.Row="1">

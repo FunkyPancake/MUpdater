@@ -1,0 +1,48 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net6.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <AssemblyName>FirmwarePack</AssemblyName>
+    </PropertyGroup>
+
+    <PropertyGroup>
+        <RsaKeyValue>Invalid</RsaKeyValue>
+        <AesKeyValue>Invalid</AesKeyValue>
+        <GeneratedText><![CDATA[
+using System%3B
+namespace FirmwarePack%3B
+public abstract partial class Base
+{
+    private const string _aesKey ="$(AesKeyValue)"%3B
+    private const string _rsaKey ="$(RsaKeyValue)"%3B
+    private static readonly byte[] _fileHeader = {90, 13, 40, 89, 53, 38}%3B 
+    protected static string AesKey{get => _aesKey%3B}
+    protected static string RsaKey{get => _rsaKey%3B}
+    protected static byte[] FileHeader{get => _fileHeader%3B}
+}
+      ]]></GeneratedText>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\CommonTypes\CommonTypes.csproj" />
+        <ProjectReference Include="..\IntelHex\IntelHex.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Ardalis.GuardClauses" Version="4.0.1" />
+        <PackageReference Include="Serilog" Version="2.12.0" />
+    </ItemGroup>
+    
+    <Target Name="AddGeneratedFile" BeforeTargets="BeforeCompile;CoreCompile" Inputs="$(MSBuildAllProjects)" Outputs="$(IntermediateOutputPath)GeneratedFile.cs">
+        <PropertyGroup>
+            <GeneratedFilePath>$(IntermediateOutputPath)GeneratedFile.cs</GeneratedFilePath>
+        </PropertyGroup>
+        <ItemGroup>
+            <Compile Include="$(GeneratedFilePath)" />
+            <FileWrites Include="$(GeneratedFilePath)" />
+        </ItemGroup>
+        <WriteLinesToFile Lines="$(GeneratedText)" File="$(GeneratedFilePath)" WriteOnlyWhenDifferent="true" Overwrite="true" />
+    </Target>
+</Project>
