@@ -10,11 +10,13 @@ var logger = new LoggerConfiguration().WriteTo.Console().CreateLogger();
 var ecuName = string.Empty;
 var swVersion = new CommonTypes.Version();
 var key = new SecureString();
+var writer = new FirmwarePackWriter(logger);
 /*TODO
     -> write help and option comments
     -> add rest of the checks for parameters
     -> exception handling with logger and returns
 */
+
 var options = new OptionSet {
     {"e|ecu=", "", s => ecuName = s}, {
         "s|sw=", "", s => {
@@ -57,7 +59,7 @@ catch (OptionException e) {
     return -1;
 }
 
-var writer = new FirmwarePackWriter(logger);
+
 return await writer.Save("./", "./fw.hex", swVersion, ecuName,
     new List<CommonTypes.Version> {new("1.2.3"), new("2.0.1")}, key)
     ? 0

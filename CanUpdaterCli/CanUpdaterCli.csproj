@@ -8,7 +8,10 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\..\MCommon\CalibrationProtocol\CalibrationProtocol.csproj" />
       <ProjectReference Include="..\FirmwarePack\FirmwarePack.csproj" />
+      <ProjectReference Include="..\MCommon\CalibrationProtocol\CalibrationProtocol.csproj" />
+      <ProjectReference Include="..\MCommon\DbcReader\DbcReader.csproj" />
     </ItemGroup>
 
     <ItemGroup>

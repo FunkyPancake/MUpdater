@@ -12,6 +12,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IntelHex", "MCommon\IntelHe
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommonTypes", "MCommon\CommonTypes\CommonTypes.csproj", "{5BA595EC-A33C-41DC-9320-AB9DAE5F5658}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DbcReader", "MCommon\DbcReader\DbcReader.csproj", "{B8CE89D1-B937-48B6-959B-454C301A7C38}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CalibrationProtocol", "MCommon\CalibrationProtocol\CalibrationProtocol.csproj", "{31B5E63B-A867-47BD-97B9-788AD50CF7A9}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -42,5 +46,13 @@ Global
 		{5BA595EC-A33C-41DC-9320-AB9DAE5F5658}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5BA595EC-A33C-41DC-9320-AB9DAE5F5658}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5BA595EC-A33C-41DC-9320-AB9DAE5F5658}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B8CE89D1-B937-48B6-959B-454C301A7C38}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B8CE89D1-B937-48B6-959B-454C301A7C38}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B8CE89D1-B937-48B6-959B-454C301A7C38}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B8CE89D1-B937-48B6-959B-454C301A7C38}.Release|Any CPU.Build.0 = Release|Any CPU
+		{31B5E63B-A867-47BD-97B9-788AD50CF7A9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{31B5E63B-A867-47BD-97B9-788AD50CF7A9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{31B5E63B-A867-47BD-97B9-788AD50CF7A9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{31B5E63B-A867-47BD-97B9-788AD50CF7A9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
