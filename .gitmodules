@@ -1,0 +1,3 @@
+[submodule "MCommon"]
+	path = MCommon
+	url = git@github.com:FunkyPancake/MCommon.git

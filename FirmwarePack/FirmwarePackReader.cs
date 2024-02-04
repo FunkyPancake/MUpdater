@@ -42,7 +42,7 @@ public class FirmwarePackReader : Base {
         //
         // //read metadata
         GetMetadata(manifestMemoryStream);
-        await GetHex(hexMemoryStream);
+        Hex = await HexIo.ReadAsync(hexMemoryStream);
     }
 
     private void GetMetadata(MemoryStream manifest) {
@@ -74,12 +74,8 @@ public class FirmwarePackReader : Base {
             RSASignaturePadding.Pkcs1);
     }
 
-    private async Task GetHex(Stream memoryStream) {
-        Hex = await HexIo.ReadAsync(memoryStream);
-    }
-
 
     public bool CheckCompatibility(EcuIdent ecuIdent,CommonTypes.Version version) {
-        return _hwCompatibility.Contains(ecuIdent.HwVersion) && SwVersion.Major > version.Major && ecuIdent.EcuName.Equals(TargetEcu);
+        return _hwCompatibility.Contains(ecuIdent.HwVersion) && ecuIdent.EcuName.Equals(TargetEcu) && SwVersion > version;
     }
 }

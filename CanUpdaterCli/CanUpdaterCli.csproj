@@ -8,11 +8,10 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\CalTp\CalTp.csproj" />
-      <ProjectReference Include="..\CanDriver\CanDriver.csproj" />
-      <ProjectReference Include="..\CanUpdater\CanUpdater.csproj" />
-      <ProjectReference Include="..\DbcReader\DbcReader.csproj" />
+      <ProjectReference Include="..\..\MCommon\CalibrationProtocol\CalibrationProtocol.csproj" />
       <ProjectReference Include="..\FirmwarePack\FirmwarePack.csproj" />
+      <ProjectReference Include="..\MCommon\CalibrationProtocol\CalibrationProtocol.csproj" />
+      <ProjectReference Include="..\MCommon\DbcReader\DbcReader.csproj" />
     </ItemGroup>
 
     <ItemGroup>
